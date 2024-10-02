@@ -39,7 +39,7 @@ class CMakeBuild(build_ext):
             assert os.path.exists(self.install_prefix), (
                 'Install prefix path %s does not exist.' % self.install_prefix)
         if self.jobs is None:
-            self.jobs = 1
+            self.jobs = 2
 
     def run(self):
         try:
