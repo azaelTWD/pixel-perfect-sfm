@@ -20,6 +20,7 @@ class CMakeBuild(build_ext):
     user_options = build_ext.user_options + [
         # The format is (long option, short option, description).
         ('install-prefix=', None, 'Path where C++ library will be installed'),
+        ('jobs=', None, 'Number of jobs to use for building (e.g., -j2)'),
     ]
 
     def initialize_options(self):
@@ -27,6 +28,7 @@ class CMakeBuild(build_ext):
         build_ext.initialize_options(self)
         # Each user option must be listed here with their default value.
         self.install_prefix = None
+        self.jobs = None
 
     def finalize_options(self):
         '''Overloaded build_ext implementation to append custom openssl
@@ -36,6 +38,8 @@ class CMakeBuild(build_ext):
         if self.install_prefix:
             assert os.path.exists(self.install_prefix), (
                 'Install prefix path %s does not exist.' % self.install_prefix)
+        if self.jobs is None:
+            self.jobs = 1
 
     def run(self):
         try:
@@ -80,10 +84,10 @@ class CMakeBuild(build_ext):
                 if os.environ.get('CMAKE_TOOLCHAIN_FILE') is not None:
                     cmake_args += ['-DVCPKG_TARGET_TRIPLET=x64-windows']
                 cmake_args += ['-A', 'x64']
-            build_args += ['--', '/m']
+            build_args += ['--', f'/m:{self.jobs}']
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j2']
+            build_args += ['--', f'-j{self.jobs}']
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
