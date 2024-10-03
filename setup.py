@@ -24,26 +24,33 @@ class CMakeBuild(build_ext):
     ]
 
     def initialize_options(self):
+        print("Initializing options...")
         """Set default values for options."""
         build_ext.initialize_options(self)
         # Each user option must be listed here with their default value.
         self.install_prefix = None
         self.jobs = None
+        print(f"Default install_prefix: {self.install_prefix}, jobs: {self.jobs}")
 
     def finalize_options(self):
+        print("Finalizing options...")
         '''Overloaded build_ext implementation to append custom openssl
         include file and library linking options'''
 
         build_ext.finalize_options(self)
         if self.install_prefix:
+            print(f"Install prefix provided: {self.install_prefix}")
             assert os.path.exists(self.install_prefix), (
                 'Install prefix path %s does not exist.' % self.install_prefix)
         if self.jobs is None:
             self.jobs = 2
+        print(f"Final jobs setting: {self.jobs}")
 
     def run(self):
+        print("Running build_ext...")
         try:
             out = subprocess.check_output(['cmake', '--version'])
+            print("CMake version retrieved:", out.decode())
         except OSError:
             raise RuntimeError(
                 "CMake must be installed to build the following extensions: " +
@@ -59,11 +66,14 @@ class CMakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
+        print(f"Building extension: {ext.name}")
         extdir = \
             os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        print(f"Extension directory: {extdir}")
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
                       '-DTESTS_ENABLED=OFF']
+        print(f"CMake arguments: {cmake_args}")
 
         avx2_enabled = os.environ.get("AVX2_ENABLED")
         if avx2_enabled is not None:
@@ -96,9 +106,10 @@ class CMakeBuild(build_ext):
         )
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-
+        print(f"Running CMake with args: {cmake_args}")
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args,
                               cwd=self.build_temp, env=env)
+        print("Building with CMake...")
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
                               cwd=self.build_temp)
         if self.install_prefix:
@@ -108,11 +119,13 @@ class CMakeBuild(build_ext):
 
 
 root = Path(__file__).parent
+print("Reading README.md...")
 with open(str(root / 'README.md'), 'r', encoding='utf-8') as f:
     readme = f.read()
+print("Reading requirements.txt...")
 with open(str(root / 'requirements.txt'), 'r') as f:
     dependencies = f.read().split('\n')
-
+print("Starting setup.py execution...")
 setup(
     name='pixsfm',
     version='1.0.0',
@@ -129,3 +142,4 @@ setup(
     include_package_data=True,
     package_data={'': ['configs/*.yaml']},
 )
+print("Finished executing setup.py.")
