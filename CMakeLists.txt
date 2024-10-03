@@ -34,12 +34,18 @@ find_package(COLMAP REQUIRED)
 ################################################################################
 # Select correct C/C++ standard
 ################################################################################
-if (${CERES_VERSION} VERSION_LESS "2.2.0")
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+find_package(Ceres REQUIRED)
+if (CERES_FOUND)
+    message(STATUS "Ceres found: ${CERES_VERSION}")
+    if (${CERES_VERSION} VERSION_LESS "2.2.0")
+        set(CMAKE_CXX_STANDARD 14)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    else()
+        set(CMAKE_CXX_STANDARD 17)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    endif()
 else()
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    message(FATAL_ERROR "Ceres Solver not found. Please install Ceres Solver.")
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
